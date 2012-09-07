@@ -1,7 +1,7 @@
 ##
 # CS 9163: Application Security
 # Professor Justin Cappos, Professor Dan Guido
-# Sandbox.py
+# Sandbox_Small.py
 #
 # @author       Marc Budofsky <mrb543@students.poly.edu>
 # @created      September 6, 2012
@@ -11,17 +11,11 @@
 ##
 
 #---Imports-------------------------------------------------------------
-import resource, inspect, os
+import resource
 
 #---Globals-------------------------------------------------------------
 DEBUG       = False
-MAX_MEMORY  = 4096
-
-# List of All Functions for eval()/exec():  http://stackoverflow.com/questions/4040620/is-it-possible-to-list-all-functions-in-a-module
-#                                           http://docs.python.org/library/inspect.html
-all_functions_list = [func for (func, obj) in inspect.getmembers(__builtins__) if inspect.isbuiltin(obj)]
-
-print all_functions_list
+MAX_MEMORY  = 2048
 
 # Blacklist of Functions for eval()/exec(): http://lybniz2.sourceforge.net/safeeval.html
 #                                           http://docs.python.org/library/functions.html
@@ -86,39 +80,26 @@ while(True):
     print "---Sandbox Menu-----------------------------------------------------"
     print "\t1. Count from 10 to 1"
     print "\t2. Compute first 10 Fibonacci Numbers"
-    print "\t3. Sandbox"
-    print "\t4. User Defined Script"
-    print "\t5. Print Sandbox Information"
+    print "\t3. User Defined Script"
     print "\t0. Exit"
     print "--------------------------------------------------------------------"
     menuOption = int(raw_input("Selection: "))
-    filename = ""
     
     if menuOption == 1:
         filename = "TestCase01.py"
     elif menuOption == 2:
         filename = "TestCase02.py"
     elif menuOption == 3:
-        filename = "Sandbox_Small.py"
-    elif menuOption == 4:
         filename = raw_input("File Name: ")
-    elif menuOption == 5:
-        mem = resource.getrlimit(resource.RLIMIT_DATA)
-        print "\nMemory Limit: " + str(mem[0]) + " Kb"
-        print "Allowed Functions: "
     elif menuOption == 0:
         break
     else:
         print "Invalid Menu Selection"
         
     try:
-        if len(filename) >= 1:
-            execfile(filename,{"__builtins__":None},blacklist_functions_dict)
+        execfile(filename,{"__builtins__":None},blacklist_functions_dict)
     except NameError:
-        if len(filename) >= 1:
-            execfile(filename)
-        else:
-            pass
+        execfile(filename)
     except ImportError:
         print "Imports are not allowed"
     except TypeError:
