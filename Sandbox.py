@@ -11,7 +11,8 @@
 ##
 
 #---Imports-------------------------------------------------------------
-import resource, inspect, os
+import resource, inspect, os, collections, threading
+from __builtin__ import *
 
 #---Globals-------------------------------------------------------------
 DEBUG       = False
@@ -21,40 +22,44 @@ MAX_MEMORY  = 4096
 #                                           http://docs.python.org/library/inspect.html
 all_functions_list = [func for (func, obj) in inspect.getmembers(__builtins__) if inspect.isbuiltin(obj)]
 
-print all_functions_list
-
 # Blacklist of Functions for eval()/exec(): http://lybniz2.sourceforge.net/safeeval.html
 #                                           http://docs.python.org/library/functions.html
 blacklist_functions_list = [
-    "__import__",
-    # "abs", "all", "any",
-    "apply",
-    # "basestring", "bin", "bool", "buffer",
-    "bytearray",
-    # "callable", "chr", "classmethod", "cmp", "coerce", "complex",
-    "compile", "delattr",
-    # "dict", "dir", "divmod", "enumerate",
-    "exec", "eval", "execfile", "file",
-    # "filter", "float", "format", "frozenset",
-    "getattr", "globals", "hasattr",
-    # "hash", "help", "hex",
-    "id", "input", 
-    # "int", "intern", "isinstance", "issubclass", "iter",
-    "locals", 
-    # "len", "list", "long",
-    # "map", "max", "min", "next", "object", "oct", "ord",
-    "memoryview", "open",
-    # "pow", "print", "property", "range",
-    "raw_input", "reload",
-    # "reduce", "repr", "reversed", "round", "set",
-    "setattr",
-    # "slice", "sorted", "staticmethod", "str", "sum", "super",
-    # "tuple", "type", "unichr", "unicode",
-    "vars",
-    # "xrange", "zip",
+    '__import__',
+    # 'abs', 'all', 'any',
+    'apply',
+    # 'basestring', 'bin', 'bool', 'buffer',
+    'bytearray',
+    # 'callable', 'chr', 'classmethod', 'cmp', 'coerce', 'complex',
+    'compile', 'delattr',
+    # 'dict', 'dir', 'divmod', 'enumerate',
+    'exec', 'eval', 'execfile', 'file',
+    # 'filter', 'float', 'format', 'frozenset',
+    'getattr', 'globals', 'hasattr',
+    # 'hash', 'help', 'hex',
+    'id', 'input', 
+    # 'int', 'intern', 'isinstance', 'issubclass', 'iter',
+    'locals', 
+    # 'len', 'list', 'long',
+    # 'map', 'max', 'min', 'next', 'object', 'oct', 'ord',
+    'memoryview', 'open',
+    # 'pow', 'print', 'property', 'range',
+    'raw_input', 'reload',
+    # 'reduce', 'repr', 'reversed', 'round', 'set',
+    'setattr',
+    # 'slice', 'sorted', 'staticmethod', 'str', 'sum', 'super',
+    # 'tuple', 'type', 'unichr', 'unicode',
+    'vars',
+    # 'xrange', 'zip',
 ]
 
-blacklist_functions_dict = dict([ (foo, None) for foo in blacklist_functions_list ])
+# Compute Allowed Functions: http://stackoverflow.com/questions/5094083/find-the-overlap-between-2-python-lists
+all_functions_multiset = collections.Counter(all_functions_list)
+blacklist_functions_multiset = collections.Counter(blacklist_functions_list)
+
+allowed_functions_list = sorted(list((all_functions_multiset - blacklist_functions_multiset).elements()))
+
+allowed_functions_dict = dict([ (foo, locals().get(foo)) for foo in allowed_functions_list ])
 
 #---System Settings-----------------------------------------------------
 # Set Minimum/Maximum Data Memory:  http://docs.python.org/library/resource.html
@@ -62,27 +67,7 @@ blacklist_functions_dict = dict([ (foo, None) for foo in blacklist_functions_lis
 resource.setrlimit(resource.RLIMIT_DATA, (MAX_MEMORY, MAX_MEMORY))
 
 #---Functions-----------------------------------------------------------
-testCase01 = """
-for foo in range(10,0,-1): 
-    print foo
-"""
-
-testCase02 = """
-def fib(x):
-    if x == 0:
-        return 0
-    elif x == 1:
-        return 1
-    else:
-        return fib(x-1) + fib(x-2)
-        
-for foo in range (10):
-    print fib(foo)
-"""
-
-testCase03 = "print locals()"
-
-while(True):
+def printMenu():
     print "---Sandbox Menu-----------------------------------------------------"
     print "\t1. Count from 10 to 1"
     print "\t2. Compute first 10 Fibonacci Numbers"
@@ -91,35 +76,43 @@ while(True):
     print "\t5. Print Sandbox Information"
     print "\t0. Exit"
     print "--------------------------------------------------------------------"
-    menuOption = int(raw_input("Selection: "))
-    filename = ""
-    
-    if menuOption == 1:
-        filename = "TestCase01.py"
-    elif menuOption == 2:
-        filename = "TestCase02.py"
-    elif menuOption == 3:
-        filename = "Sandbox_Small.py"
-    elif menuOption == 4:
-        filename = raw_input("File Name: ")
-    elif menuOption == 5:
-        mem = resource.getrlimit(resource.RLIMIT_DATA)
-        print "\nMemory Limit: " + str(mem[0]) + " Kb"
-        print "Allowed Functions: "
-    elif menuOption == 0:
-        break
-    else:
-        print "Invalid Menu Selection"
+
+def main():
+    while(True):
+        printMenu()
+        menuOption = int(raw_input("Selection: "))
+        filename = ""
         
-    try:
-        if len(filename) >= 1:
-            execfile(filename,{"__builtins__":None},blacklist_functions_dict)
-    except NameError:
-        if len(filename) >= 1:
-            execfile(filename)
+        if menuOption == 1:
+            filename = "TestCase01.py"
+            print "Count from 10 to 1"
+        elif menuOption == 2:
+            filename = "TestCase02.py"
+            print "Compute first 10 Fibonacci Numbers"
+        elif menuOption == 3:
+            filename = "Sandbox_Small.py"
+        elif menuOption == 4:
+            filename = raw_input("File Name: ")
+            print filename
+        elif menuOption == 5:
+            mem = resource.getrlimit(resource.RLIMIT_DATA)
+            print "\nSandbox Information"
+            print "Memory Limit: " + str(mem[0]) + " Kb"
+            print "Allowed Functions: " + str(allowed_functions_list)[1:-1] + "\n"
+        elif menuOption == 0:
+            break
         else:
-            pass
-    except ImportError:
-        print "Imports are not allowed"
-    except TypeError:
-        print "Code contains an unallowed function"
+            print "Invalid Menu Selection"
+        
+        try:
+            execfile(filename,{"__builtins__":None},allowed_functions_dict)
+        except IOError:
+            if menuOption == 4:
+                print "File could not be found"
+            else:
+                pass
+        except TypeError:
+            print "Code contains an unallowed function"
+        #execfile(filename,{"__builtins__":None},allowed_functions_dict)
+        
+main()

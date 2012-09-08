@@ -11,7 +11,6 @@
 ##
 
 #---Imports-------------------------------------------------------------
-import resource
 
 #---Globals-------------------------------------------------------------
 DEBUG       = False
@@ -53,7 +52,7 @@ blacklist_functions_dict = dict([ (foo, None) for foo in blacklist_functions_lis
 #---System Settings-----------------------------------------------------
 # Set Minimum/Maximum Data Memory:  http://docs.python.org/library/resource.html
 #                                   http://stackoverflow.com/questions/2308091/how-to-limit-python-heap-size
-resource.setrlimit(resource.RLIMIT_DATA, (MAX_MEMORY, MAX_MEMORY))
+# resource.setrlimit(resource.RLIMIT_DATA, (MAX_MEMORY, MAX_MEMORY))
 
 #---Functions-----------------------------------------------------------
 testCase01 = """
