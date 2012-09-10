@@ -32,8 +32,8 @@ blacklist_functions_list = [
     # 'basestring', 'bin', 'bool', 'buffer',
     'bytearray',
     # 'callable', 'chr', 'classmethod', 'cmp', 'coerce', 'complex',
-    'compile', 'delattr',
-    # 'dict', 'dir', 'divmod', 'enumerate',
+    'compile', 'delattr', 'dir',
+    # 'dict', 'divmod', 'enumerate',
     'exec', 'eval', 'execfile', 'file',
     # 'filter', 'float', 'format', 'frozenset',
     'getattr', 'globals', 'hasattr',
@@ -81,10 +81,12 @@ def printMenu():
     print "\t5. Print Sandbox Information"
     print "\t0. Exit"
     print "--------------------------------------------------------------------"
-    
+
+# Allow User Functions in Sandbox:
+#   http://stackoverflow.com/questions/10850052/python-have-a-user-defined-function-as-an-input-while-keeping-the-source-code-i
 def createUserFunction(src):
     comp = compile(src, "<string>", "exec")
-    exec comp in globals(), locals()
+    exec comp
     functionName = list(set(locals()))[0]
     functionCall = locals()[functionName]
     return functionCall
@@ -102,7 +104,8 @@ def main(args):
             filename = "TestCase02.py"
             print "Compute first 10 Fibonacci Numbers"
         elif menuOption == 3:
-            filename = "Sandbox_Small.py"
+            # filename = "Sandbox_Small.py"
+            pass
         elif menuOption == 4:
             filename = raw_input("File Name: ")
             print filename
@@ -117,6 +120,8 @@ def main(args):
             print "Invalid Menu Selection"
         
         try:
+            user_functions_dict = allowed_functions_dict.copy()
+            user_functions_dict["__builtins__"] = None
             appfile = [line.replace('\n','') for line in open(filename, "r") if line[0] != "#"]
             for cnt in range(len(appfile)):
                 if appfile[cnt].find("def") != -1:
@@ -133,18 +138,23 @@ def main(args):
                         
                         functionSrc = "\n".join(funcLine for funcLine in functionCode)
                         functionComp = createUserFunction(functionSrc)
-                        allowed_functions_dict[functionName] = functionComp
+                        user_functions_dict[functionName] = functionComp
                         
-            execfile(filename,allowed_functions_dict)
+            execfile(filename,user_functions_dict)
         except IOError:
             if menuOption == 4:
                 print "File could not be found"
             else:
                 pass
         except NameError, e:
+            # print "Unknown function found in code..."
             print "NameError: ", e
         except TypeError, e:
             print "TypeError: ", e
+        except ImportError, e:
+            print "ImportError: ", e
+        finally:
+            del(user_functions_dict)
         
 main(sys.argv)
 
