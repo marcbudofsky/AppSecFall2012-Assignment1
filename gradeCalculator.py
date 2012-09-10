@@ -28,18 +28,18 @@ def viewGrades():
     print "------------------------------------------------------------------------------------------\n\n"
 
 print "Grade Calculator\n"
-while True:
+while 1:
     studentName = raw_input("Enter Student Name: ")
     if studentName == "":
         viewGrades()
         break
-    while True:
+    while 1:
         studentGrade = raw_input("Enter Grades (1,2,3,F): ")
         if len(studentGrade.split(',')) == 4:
-            validGrades = True
+            validGrades = 1
             for singleGrade in studentGrade.split(','):
                 if int(singleGrade) not in range(101):
-                    validGrades = False
+                    validGrades = 0
             if validGrades:
                 break
     studentGrades[studentName] = [singleGrade for singleGrade in studentGrade.split(',')]

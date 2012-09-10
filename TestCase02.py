@@ -1,7 +1,7 @@
 ##
 # CS 9163: Application Security
 # Professor Justin Cappos, Professor Dan Guido
-# TestCase01.py
+# TestCase02.py
 # 
 # @author       Marc Budofsky <mrb543@students.poly.edu>
 # @created      September 7, 2012

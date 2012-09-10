@@ -5,7 +5,7 @@
 #
 # @author       Marc Budofsky <mrb543@students.poly.edu>
 # @created      September 6, 2012
-# @modified     September 7, 2012
+# @modified     September 10, 2012
 #
 # Secure Turing Complete Sandbox Challenge
 # Language Run by Sandbox is similar to Python
@@ -62,9 +62,6 @@ blacklist_functions_multiset = collections.Counter(blacklist_functions_list)
 allowed_functions_list = sorted(list((all_functions_multiset - blacklist_functions_multiset).elements()))
 
 allowed_functions_dict = dict([ (foo, locals().get(foo)) for foo in allowed_functions_list ])
-# allowed_functions_dict["__builtins__"] = None
-
-# print allowed_functions_dict['dir']
 
 #---System Settings-----------------------------------------------------
 # Set Minimum/Maximum Data Memory:  http://docs.python.org/library/resource.html
@@ -76,9 +73,10 @@ def printMenu():
     print "---Sandbox Menu-----------------------------------------------------"
     print "\t1. Count from 10 to 1"
     print "\t2. Compute first 10 Fibonacci Numbers"
-    print "\t3. Sandbox"
-    print "\t4. User Defined Script"
-    print "\t5. Print Sandbox Information"
+    print "\t3. Compute 10!"
+    print "\t4. Malicious Test"
+    print "\t5. User Defined Script"
+    print "\t6. Print Sandbox Information"
     print "\t0. Exit"
     print "--------------------------------------------------------------------"
 
@@ -104,12 +102,15 @@ def main(args):
             filename = "TestCase02.py"
             print "Compute first 10 Fibonacci Numbers"
         elif menuOption == 3:
-            # filename = "Sandbox_Small.py"
-            pass
+            filename = "TestCase03.py"
+            print "Compute 10!"
         elif menuOption == 4:
+            filename = "malicious.py"
+            print "Malicious Test"
+        elif menuOption == 5:
             filename = raw_input("File Name: ")
             print filename
-        elif menuOption == 5:
+        elif menuOption == 6:
             mem = resource.getrlimit(resource.RLIMIT_DATA)
             print "\nSandbox Information"
             print "Memory Limit: " + str(mem[0]) + " Kb"
@@ -142,7 +143,7 @@ def main(args):
                         
             execfile(filename,user_functions_dict)
         except IOError:
-            if menuOption == 4:
+            if menuOption == 5:
                 print "File could not be found"
             else:
                 pass
