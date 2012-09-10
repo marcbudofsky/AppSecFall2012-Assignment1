@@ -8,10 +8,11 @@
 # @modified     September 7, 2012
 #
 # Secure Turing Complete Sandbox Challenge
+# Language Run by Sandbox is similar to Python
 ##
 
 #---Imports-------------------------------------------------------------
-import resource, inspect, os, collections, threading
+import resource, inspect, os, collections, threading, sys
 from __builtin__ import *
 
 #---Globals-------------------------------------------------------------
@@ -25,7 +26,7 @@ all_functions_list = [func for (func, obj) in inspect.getmembers(__builtins__) i
 # Blacklist of Functions for eval()/exec(): http://lybniz2.sourceforge.net/safeeval.html
 #                                           http://docs.python.org/library/functions.html
 blacklist_functions_list = [
-    '__import__',
+    '__import__', # 'import',
     # 'abs', 'all', 'any',
     'apply',
     # 'basestring', 'bin', 'bool', 'buffer',
@@ -44,7 +45,8 @@ blacklist_functions_list = [
     # 'map', 'max', 'min', 'next', 'object', 'oct', 'ord',
     'memoryview', 'open',
     # 'pow', 'print', 'property', 'range',
-    'raw_input', 'reload',
+    # 'raw_input', 
+    'reload',
     # 'reduce', 'repr', 'reversed', 'round', 'set',
     'setattr',
     # 'slice', 'sorted', 'staticmethod', 'str', 'sum', 'super',
@@ -53,13 +55,15 @@ blacklist_functions_list = [
     # 'xrange', 'zip',
 ]
 
-# Compute Allowed Functions: http://stackoverflow.com/questions/5094083/find-the-overlap-between-2-python-lists
+# Compute Allowed Functions for eval()/exec(): http://stackoverflow.com/questions/5094083/find-the-overlap-between-2-python-lists
 all_functions_multiset = collections.Counter(all_functions_list)
 blacklist_functions_multiset = collections.Counter(blacklist_functions_list)
 
 allowed_functions_list = sorted(list((all_functions_multiset - blacklist_functions_multiset).elements()))
 
 allowed_functions_dict = dict([ (foo, locals().get(foo)) for foo in allowed_functions_list ])
+
+# print allowed_functions_dict['dir']
 
 #---System Settings-----------------------------------------------------
 # Set Minimum/Maximum Data Memory:  http://docs.python.org/library/resource.html
@@ -76,8 +80,14 @@ def printMenu():
     print "\t5. Print Sandbox Information"
     print "\t0. Exit"
     print "--------------------------------------------------------------------"
+    
+def createUserFunction(src):
+    exec src in globals(), locals()
+    functionName = list(set(locals()))[0]
+    functionCall = locals()[functionName]
+    return functionCall
 
-def main():
+def main(args):
     while(True):
         printMenu()
         menuOption = int(raw_input("Selection: "))
@@ -105,14 +115,39 @@ def main():
             print "Invalid Menu Selection"
         
         try:
+            appfile = [line.replace('\n','') for line in open(filename, "r") if line[0] != "#"]
+            for cnt in range(len(appfile)):
+                if appfile[cnt].find("def") != -1:
+                    functionDef  = appfile[cnt].split(' ')[1]
+                    functionCode = [appfile[cnt]]
+                    safeCode = True
+                    while (appfile[cnt].strip() != ""):
+                        cnt += 1
+                        functionCode.append(appfile[cnt].replace("    ", "\t"))
+                        if any(blacklist in appfile[cnt] for blacklist in blacklist_functions_list):
+                            safeCode = False
+                    if safeCode:
+                        functionName = functionCode[0].split(' ')[1].split('(')[0]
+                        
+                        functionSrc = "\n".join(funcLine for funcLine in functionCode)
+                        functionComp = createUserFunction(functionSrc)
+                        functionComp(10)
+                        allowed_functions_dict[functionName] = functionComp
+                        
+            print allowed_functions_dict
             execfile(filename,{"__builtins__":None},allowed_functions_dict)
         except IOError:
             if menuOption == 4:
                 print "File could not be found"
             else:
                 pass
-        except TypeError:
-            print "Code contains an unallowed function"
-        #execfile(filename,{"__builtins__":None},allowed_functions_dict)
+        except NameError, e:
+            print "NameError: ", e
+        except TypeError, e:
+            print "TypeError: ", e
         
-main()
+main(sys.argv)
+
+# Remove menu >> pass filename as arg to program
+# Make sure use of 'execfile()' is allowed
+# Check ability to override built in functions with malicious code >> possibly wrap built-ins that are blacklisted
