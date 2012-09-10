@@ -62,6 +62,7 @@ blacklist_functions_multiset = collections.Counter(blacklist_functions_list)
 allowed_functions_list = sorted(list((all_functions_multiset - blacklist_functions_multiset).elements()))
 
 allowed_functions_dict = dict([ (foo, locals().get(foo)) for foo in allowed_functions_list ])
+# allowed_functions_dict["__builtins__"] = None
 
 # print allowed_functions_dict['dir']
 
@@ -82,7 +83,8 @@ def printMenu():
     print "--------------------------------------------------------------------"
     
 def createUserFunction(src):
-    exec src in globals(), locals()
+    comp = compile(src, "<string>", "exec")
+    exec comp in globals(), locals()
     functionName = list(set(locals()))[0]
     functionCall = locals()[functionName]
     return functionCall
@@ -131,11 +133,9 @@ def main(args):
                         
                         functionSrc = "\n".join(funcLine for funcLine in functionCode)
                         functionComp = createUserFunction(functionSrc)
-                        functionComp(10)
                         allowed_functions_dict[functionName] = functionComp
                         
-            print allowed_functions_dict
-            execfile(filename,{"__builtins__":None},allowed_functions_dict)
+            execfile(filename,allowed_functions_dict)
         except IOError:
             if menuOption == 4:
                 print "File could not be found"
