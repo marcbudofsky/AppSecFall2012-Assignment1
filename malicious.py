@@ -1,3 +1,5 @@
-# import os
+def open():
+    print "readme"
 
-print locals()
+x = 200
+print id(x)

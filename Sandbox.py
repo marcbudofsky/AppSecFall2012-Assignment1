@@ -12,12 +12,18 @@
 ##
 
 #---Imports-------------------------------------------------------------
-import resource, inspect, os, collections, threading, sys
+import os
+import sys
+import inspect
+import resource
+import threading
+import collections
 from __builtin__ import *
+from optparse import OptionParser
 
 #---Globals-------------------------------------------------------------
 DEBUG       = False
-MAX_MEMORY  = 4096
+MAX_MEMORY  = 1024 * 16
 
 # List of All Functions for eval()/exec():  http://stackoverflow.com/questions/4040620/is-it-possible-to-list-all-functions-in-a-module
 #                                           http://docs.python.org/library/inspect.html
@@ -26,7 +32,7 @@ all_functions_list = [func for (func, obj) in inspect.getmembers(__builtins__) i
 # Blacklist of Functions for eval()/exec(): http://lybniz2.sourceforge.net/safeeval.html
 #                                           http://docs.python.org/library/functions.html
 blacklist_functions_list = [
-    '__import__', # 'import',
+    '__import__',
     # 'abs', 'all', 'any',
     'apply',
     # 'basestring', 'bin', 'bool', 'buffer',
@@ -63,10 +69,23 @@ allowed_functions_list = sorted(list((all_functions_multiset - blacklist_functio
 
 allowed_functions_dict = dict([ (foo, locals().get(foo)) for foo in allowed_functions_list ])
 
+# Allowed List of Built In Types
+allowed_types_list = [
+    'True', 'False',
+    'int', 'float', 'long', 'complex',
+    'str', 'unicode', 'list', 'tuple', 'buffer', 'xrange',
+]
+
+allowed_types_dict = dict([ (foo, locals().get(foo)) for foo in allowed_types_list ])
+
+# Compute Total List of Allows
+all_allowed_dict = dict(allowed_types_dict.items() + allowed_functions_dict.items())
+
 #---System Settings-----------------------------------------------------
 # Set Minimum/Maximum Data Memory:  http://docs.python.org/library/resource.html
 #                                   http://stackoverflow.com/questions/2308091/how-to-limit-python-heap-size
 resource.setrlimit(resource.RLIMIT_DATA, (MAX_MEMORY, MAX_MEMORY))
+resource.setrlimit(resource.RLIMIT_STACK, (MAX_MEMORY, MAX_MEMORY))
 
 #---Functions-----------------------------------------------------------
 def printMenu():
@@ -113,15 +132,16 @@ def main(args):
         elif menuOption == 6:
             mem = resource.getrlimit(resource.RLIMIT_DATA)
             print "\nSandbox Information"
-            print "Memory Limit: " + str(mem[0]) + " Kb"
-            print "Allowed Functions: " + str(allowed_functions_list)[1:-1] + "\n"
+            print "Memory Limit: " + str(int(mem[0]) / 1024) + " Mb"
+            print "Allowed Built-In Functions: " + str(allowed_functions_list)[1:-1]
+            print "Allowed Built-In Types: " + str(allowed_types_list)[1:-1] + "\n"
         elif menuOption == 0:
             break
         else:
             print "Invalid Menu Selection"
         
         try:
-            user_functions_dict = allowed_functions_dict.copy()
+            user_functions_dict = all_allowed_dict.copy()
             user_functions_dict["__builtins__"] = None
             appfile = [line.replace('\n','') for line in open(filename, "r") if line[0] != "#"]
             for cnt in range(len(appfile)):
@@ -132,8 +152,8 @@ def main(args):
                     while (appfile[cnt].strip() != ""):
                         cnt += 1
                         functionCode.append(appfile[cnt].replace("    ", "\t"))
-                        if any(blacklist in appfile[cnt] for blacklist in blacklist_functions_list):
-                            safeCode = False
+                        # if any(blacklist in appfile[cnt] for blacklist in blacklist_functions_list):
+                        #    safeCode = False
                     if safeCode:
                         functionName = functionCode[0].split(' ')[1].split('(')[0]
                         
@@ -141,6 +161,7 @@ def main(args):
                         functionComp = createUserFunction(functionSrc)
                         user_functions_dict[functionName] = functionComp
                         
+            # print user_functions_dict
             execfile(filename,user_functions_dict)
         except IOError:
             if menuOption == 5:
