@@ -17,4 +17,6 @@ def factorial(x):
         return x * factorial(x-1)
         
 for foo in range (10):
-    print factorial(foo)
+    fact = factorial(foo)
+
+print fact

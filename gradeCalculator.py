@@ -15,7 +15,7 @@ def calculateFinalAverage(studentName):
 ##
 def viewGrades():
     print "\n\n         Student         |  Exam 1  |  Exam 2  |  Exam 3  |  Final Exam  |  Final Average"
-    print "------------------------------------------------------------------------------------------"
+    print "-" * 90
     for studentName in sorted(studentGrades.keys()):
         print studentName + (' ' * (25 - len(studentName))) + "|",
         examCount = 1
@@ -25,15 +25,15 @@ def viewGrades():
             examCount += 1
         finalAverage = calculateFinalAverage(studentName)
         print (' ' * ((15 - len(finalAverage)) / 2)) + '\033[1;' + ('32m' if float(finalAverage) >= 65.0 else '31m') + finalAverage + '\033[0m'
-    print "------------------------------------------------------------------------------------------\n\n"
+    print "-" * 90 + "\n\n"
 
 print "Grade Calculator\n"
-while 1:
+while True:
     studentName = raw_input("Enter Student Name: ")
     if studentName == "":
         viewGrades()
         break
-    while 1:
+    while True:
         studentGrade = raw_input("Enter Grades (1,2,3,F): ")
         if len(studentGrade.split(',')) == 4:
             validGrades = 1

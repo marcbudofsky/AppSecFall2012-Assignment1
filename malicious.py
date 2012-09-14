@@ -1,5 +1,7 @@
-def open():
-    print "readme"
+#encoding: rot-13
 
-x = 200
-print id(x)
+sebz __ohvygva__ vzcbeg *
+
+sbb = bcra("Fnaqobk.cl", "e")
+
+cevag sbb.ernq()
