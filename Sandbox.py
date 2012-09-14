@@ -5,10 +5,10 @@
 #
 # @author       Marc Budofsky <mrb543@students.poly.edu>
 # @created      September 6, 2012
-# @modified     September 10, 2012
+# @modified     September 12, 2012
 #
 # Secure Turing Complete Sandbox Challenge
-# Language Run by Sandbox is similar to Python
+# Executes 'Pythonic' Scripts (Limited Subset of Python)
 ##
 
 #---Imports-------------------------------------------------------------
@@ -56,8 +56,8 @@ blacklist_functions_list = [
     # 'reduce', 'repr', 'reversed', 'round', 'set',
     'setattr',
     # 'slice', 'sorted', 'staticmethod', 'str', 'sum', 'super',
-    # 'tuple', 'type', 'unichr', 'unicode',
-    'vars',
+    # 'tuple', 'unichr', 'unicode',
+    'vars', 'type',
     # 'xrange', 'zip',
 ]
 
@@ -107,11 +107,15 @@ def createUserFunction(src):
     functionName = list(set(locals()))[0]
     functionCall = locals()[functionName]
     return functionCall
-
+    
 def main(args):
     while(True):
         printMenu()
-        menuOption = int(raw_input("Selection: "))
+        menuOpt = raw_input("Selection: ")
+        try:
+            menuOption = int(menuOpt)
+        except:
+            continue
         filename = ""
         
         if menuOption == 1:
@@ -130,11 +134,11 @@ def main(args):
             filename = raw_input("File Name: ")
             print filename
         elif menuOption == 6:
-            mem = resource.getrlimit(resource.RLIMIT_DATA)
             print "\nSandbox Information"
-            print "Memory Limit: " + str(int(mem[0]) / 1024) + " Mb"
-            print "Allowed Built-In Functions: " + str(allowed_functions_list)[1:-1]
-            print "Allowed Built-In Types: " + str(allowed_types_list)[1:-1] + "\n"
+            print "Memory Limit, Data: " + str(int(resource.getrlimit(resource.RLIMIT_DATA)[0]) / 1024) + " Mb"
+            print "Memory Limit, Stack: " + str(int(resource.getrlimit(resource.RLIMIT_DATA)[0]) / 1024) + " Mb"
+            print "Allowed Built-In Functions (" + str(len(allowed_functions_list)) + "): " + str(allowed_functions_list)[1:-1]
+            print "Allowed Built-In Types (" + str(len(allowed_types_list)) + "): " + str(allowed_types_list)[1:-1] + "\n"
         elif menuOption == 0:
             break
         else:
@@ -146,26 +150,25 @@ def main(args):
             appfile = [line.replace('\n','') for line in open(filename, "r") if line[0] != "#"]
             for cnt in range(len(appfile)):
                 if appfile[cnt].find("def") != -1:
-                    functionDef  = appfile[cnt].split(' ')[1]
+                    functionDef = appfile[cnt].split(' ')[1]
                     functionCode = [appfile[cnt]]
                     safeCode = True
                     while (appfile[cnt].strip() != ""):
                         cnt += 1
-                        functionCode.append(appfile[cnt].replace("    ", "\t"))
+                        functionCode.append(appfile[cnt].replace(" ", "\t"))
                         # if any(blacklist in appfile[cnt] for blacklist in blacklist_functions_list):
-                        #    safeCode = False
+                        #   safeCode = False
                     if safeCode:
                         functionName = functionCode[0].split(' ')[1].split('(')[0]
                         
                         functionSrc = "\n".join(funcLine for funcLine in functionCode)
                         functionComp = createUserFunction(functionSrc)
                         user_functions_dict[functionName] = functionComp
-                        
-            # print user_functions_dict
+                    
             execfile(filename,user_functions_dict)
         except IOError:
             if menuOption == 5:
-                print "File could not be found"
+                print "File '" + filename + "' could not be found"
             else:
                 pass
         except NameError, e:
@@ -181,5 +184,9 @@ def main(args):
 main(sys.argv)
 
 # Remove menu >> pass filename as arg to program
-# Make sure use of 'execfile()' is allowed
 # Check ability to override built in functions with malicious code >> possibly wrap built-ins that are blacklisted
+
+## Moshe Notes
+# Check if classes are allowed
+# dont look for blacklisted functions - use compiler module, walk along tree and make sure each node is in safe list
+# check for utf-8, utf-16 encoding
