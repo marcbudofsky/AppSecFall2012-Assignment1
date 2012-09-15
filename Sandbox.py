@@ -5,7 +5,7 @@
 #
 # @author       Marc Budofsky <mrb543@students.poly.edu>
 # @created      September 6, 2012
-# @modified     September 12, 2012
+# @modified     September 14, 2012
 #
 # Secure Turing Complete Sandbox Challenge
 # Executes 'Pythonic' Scripts (Limited Subset of Python)
@@ -16,13 +16,10 @@ import os
 import sys
 import inspect
 import resource
-import threading
 import collections
 from __builtin__ import *
-from optparse import OptionParser
 
 #---Globals-------------------------------------------------------------
-DEBUG       = False
 MAX_MEMORY  = 1024 * 16
 
 # List of All Functions for eval()/exec():  http://stackoverflow.com/questions/4040620/is-it-possible-to-list-all-functions-in-a-module
@@ -88,17 +85,6 @@ resource.setrlimit(resource.RLIMIT_DATA, (MAX_MEMORY, MAX_MEMORY))
 resource.setrlimit(resource.RLIMIT_STACK, (MAX_MEMORY, MAX_MEMORY))
 
 #---Functions-----------------------------------------------------------
-def printMenu():
-    print "---Sandbox Menu-----------------------------------------------------"
-    print "\t1. Count from 10 to 1"
-    print "\t2. Compute first 10 Fibonacci Numbers"
-    print "\t3. Compute 10!"
-    print "\t4. Malicious Test"
-    print "\t5. User Defined Script"
-    print "\t6. Print Sandbox Information"
-    print "\t0. Exit"
-    print "--------------------------------------------------------------------"
-
 # Allow User Functions in Sandbox:
 #   http://stackoverflow.com/questions/10850052/python-have-a-user-defined-function-as-an-input-while-keeping-the-source-code-i
 def createUserFunction(src):
@@ -108,85 +94,49 @@ def createUserFunction(src):
     functionCall = locals()[functionName]
     return functionCall
     
-def main(args):
-    while(True):
-        printMenu()
-        menuOpt = raw_input("Selection: ")
-        try:
-            menuOption = int(menuOpt)
-        except:
-            continue
-        filename = ""
+def main():
+    if (len(sys.argv) < 2):
+    	print "Usage:", sys.argv[0], "script_to_run.py { <script_to_run_arg_1> <script_to_run_arg_2> ... }"
+    	sys.exit(1)
+    
+    scriptToRun = sys.argv[1]
         
-        if menuOption == 1:
-            filename = "TestCase01.py"
-            print "Count from 10 to 1"
-        elif menuOption == 2:
-            filename = "TestCase02.py"
-            print "Compute first 10 Fibonacci Numbers"
-        elif menuOption == 3:
-            filename = "TestCase03.py"
-            print "Compute 10!"
-        elif menuOption == 4:
-            filename = "malicious.py"
-            print "Malicious Test"
-        elif menuOption == 5:
-            filename = raw_input("File Name: ")
-            print filename
-        elif menuOption == 6:
-            print "\nSandbox Information"
-            print "Memory Limit, Data: " + str(int(resource.getrlimit(resource.RLIMIT_DATA)[0]) / 1024) + " Mb"
-            print "Memory Limit, Stack: " + str(int(resource.getrlimit(resource.RLIMIT_DATA)[0]) / 1024) + " Mb"
-            print "Allowed Built-In Functions (" + str(len(allowed_functions_list)) + "): " + str(allowed_functions_list)[1:-1]
-            print "Allowed Built-In Types (" + str(len(allowed_types_list)) + "): " + str(allowed_types_list)[1:-1] + "\n"
-        elif menuOption == 0:
-            break
-        else:
-            print "Invalid Menu Selection"
-        
-        try:
-            user_functions_dict = all_allowed_dict.copy()
-            user_functions_dict["__builtins__"] = None
-            appfile = [line.replace('\n','') for line in open(filename, "r") if line[0] != "#"]
-            for cnt in range(len(appfile)):
-                if appfile[cnt].find("def") != -1:
-                    functionDef = appfile[cnt].split(' ')[1]
-                    functionCode = [appfile[cnt]]
-                    safeCode = True
-                    while (appfile[cnt].strip() != ""):
-                        cnt += 1
-                        functionCode.append(appfile[cnt].replace(" ", "\t"))
-                        # if any(blacklist in appfile[cnt] for blacklist in blacklist_functions_list):
-                        #   safeCode = False
-                    if safeCode:
-                        functionName = functionCode[0].split(' ')[1].split('(')[0]
-                        
-                        functionSrc = "\n".join(funcLine for funcLine in functionCode)
-                        functionComp = createUserFunction(functionSrc)
-                        user_functions_dict[functionName] = functionComp
+    try:
+        user_allowed_dict = all_allowed_dict.copy()
+        user_allowed_dict["__builtins__"] = None
+        user_allowed_dict["argv"] = sys.argv[1:]
+        user_allowed_dict["exit"] = sys.exit
+        appfile = [line.replace('\n','') for line in open(scriptToRun, "r") if line[0] != "#"]
+        for cnt in range(len(appfile)):
+            if appfile[cnt].find("def") != -1:
+                functionDef = appfile[cnt].split(' ')[1]
+                functionCode = [appfile[cnt]]
+                safeCode = True
+                while (appfile[cnt].strip() != ""):
+                    cnt += 1
+                    functionCode.append(appfile[cnt].replace(" ", "\t"))
+                    # if any(blacklist in appfile[cnt] for blacklist in blacklist_functions_list):
+                    #   safeCode = False
+                if safeCode:
+                    functionName = functionCode[0].split(' ')[1].split('(')[0]
                     
-            execfile(filename,user_functions_dict)
-        except IOError:
-            if menuOption == 5:
-                print "File '" + filename + "' could not be found"
-            else:
-                pass
-        except NameError, e:
-            # print "Unknown function found in code..."
-            print "NameError: ", e
-        except TypeError, e:
-            print "TypeError: ", e
-        except ImportError, e:
-            print "ImportError: ", e
-        finally:
-            del(user_functions_dict)
+                    functionSrc = "\n".join(funcLine for funcLine in functionCode)
+                    functionComp = createUserFunction(functionSrc)
+                    user_functions_dict[functionName] = functionComp
+        execfile(scriptToRun,user_allowed_dict)
+    except IOError:
+        print "File '" + scriptToRun + "' could not be found"
+    except SystemExit:
+        pass
+    except NameError:
+        print "Unknown function found in " + scriptToRun
+    except:
+        print "Error in executing " + scriptToRun
+    finally:
+        del(user_allowed_dict)
         
-main(sys.argv)
-
-# Remove menu >> pass filename as arg to program
-# Check ability to override built in functions with malicious code >> possibly wrap built-ins that are blacklisted
+main()
 
 ## Moshe Notes
 # Check if classes are allowed
-# dont look for blacklisted functions - use compiler module, walk along tree and make sure each node is in safe list
-# check for utf-8, utf-16 encoding
+# Use compile module to traverse tree

@@ -1,7 +1,10 @@
-#encoding: rot-13
+#[x for x in [].__class__.__class__("", (),
+#    {"__iter__": lambda self: self,
+#    "next": lambda self: 1})()
+#    if 0]
 
-sebz __ohvygva__ vzcbeg *
+foo = []
+for cnt in range(100000000):
+    foo.append(cnt)
 
-sbb = bcra("Fnaqobk.cl", "e")
-
-cevag sbb.ernq()
+print foo
