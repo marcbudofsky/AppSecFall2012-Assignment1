@@ -16,7 +16,17 @@ def factorial(x):
     else:
         return x * factorial(x-1)
         
-for foo in range (10):
+if len(argv) < 2:
+    print "Usage:", argv[0], "number"
+    exit()
+    
+try:
+    rng = int(argv[1])
+except:
+    print "A number is required to run:", str(argv[1])[1:-1]
+    exit()
+    
+for foo in range (rng):
     fact = factorial(foo)
 
 print fact

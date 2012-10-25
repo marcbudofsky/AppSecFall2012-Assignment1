@@ -1,0 +1,34 @@
+Marc Budofsky
+September 18, 2012
+CS9163 - Application Security
+Secure Turing Complete Sandbox Challenge
+
+/**
+ * Deliverables
+ **/
+ > Sandbox.py
+ 
+/**
+ * Test Scripts
+ **/
+ > TestCases/TestCase01.py
+ > TestCases/TestCase02.py
+ > TestCases/TestCase03.py
+ > TestCases/TestCase04.py
+ > TestCases/classTest.py
+ > TestCases/maliciousTest.py
+
+/**
+ * Compiling
+ **/
+ > Sandbox.py, and the Test Cases, do not need to be compiled.  The application
+   can be executed using: python Sandbox.py script_to_run.py { <script_to_run_arg_x> ... }
+ > Optional arguments for the script [script_to_run_arg_x] can be added as needed.
+   
+/**
+ * Notes
+ **/
+ > Memory is limited to 512 MB each for the Stack and Data.  If the script attempts to use
+   or allocate more than this, the Sandbox with exit with a Segmentation Fault.  Additionally
+   Segmentation Faults have been observed when recursion depths are allowed to grow without
+   bounds.

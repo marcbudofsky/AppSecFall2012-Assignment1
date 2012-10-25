@@ -1,4 +1,19 @@
-# Xor 2 Numbers
+##
+# CS 9163: Application Security
+# Professor Justin Cappos, Professor Dan Guido
+# TestCase04.py
+# 
+# @author       Marc Budofsky <mrb543@students.poly.edu>
+# @created      September 14, 2012
+# @modified     September 14, 2012
+# 
+# Calculate XOR of 2 Numbers; Print out Decimal Value
+##
+
+if len(argv) < 3:
+    print "Usage:", argv[0], "number1 number2"
+    exit()
+
 try:
     num1 = int(argv[1])
     num2 = int(argv[2])
@@ -21,7 +36,6 @@ for cnt in range(len(bin1)):
     bin3 += str(tmp)
     
 num = 0
-
 for cnt in range(len(bin3)):
     num += int(bin3[cnt]) << (len(bin3) - (cnt + 1))
     
